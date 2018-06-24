@@ -1,0 +1,76 @@
+function [plaza,v,acone] = move_forward(plaza,v)
+%前进规则
+%分为三段从车前进方向前后扫描每一辆车，分别是收费亭前面，收费亭和收费亭后面
+%对于收费亭前或收费亭后的车，如果该车前面位置被一辆车占用，则该车陂标记为-2，表示换道准备
+%否则，该车以概率为prob前进到它前面的位置
+[L, W] = size(plaza); %get its dimensions
+acone=0;
+for i = (L-1):-1:1          
+    for j = 1:W
+        if i==L-1  %边界速度纠正
+            v(i,j)=1;
+        elseif i==L-2 && v(i,j)==3
+            v(i,j)=2;
+        end
+        if plaza(i,j) == 1 
+            if plaza(i+v(i,j), j) == 0     %正常行驶
+                plaza(i,j) = 0;
+                plaza(i+v(i,j), j) = 1;
+                v(i+v(i,j), j) = v(i,j);
+                v(i,j) = 0;
+            else                          %非正常处理
+                if v(i,j)==1
+                     plaza(i,j) = -2;               %原地不动，变道判定
+                elseif v(i,j)==2
+                        if plaza(i+1, j)==0
+                           v(i,j)=1;
+                           plaza(i,j) = 0;
+                           plaza(i+v(i,j), j) = 1;
+                           v(i+v(i,j), j) = v(i,j);
+                           v(i,j) = 0;
+                        else
+                            v(i,j)=1;
+                            plaza(i,j) = -2;   %原地不动，变道判定
+                        end
+                elseif v(i,j)==3
+                        if plaza(i+2, j)==0
+                           v(i,j)=2;
+                           plaza(i,j) = 0;
+                           plaza(i+v(i,j), j) = 1;
+                           v(i+v(i,j), j) = v(i,j);
+                           v(i,j) = 0;
+                        elseif plaza(i+1, j)==0
+                           v(i,j)=1;
+                           plaza(i,j) = 0;
+                           plaza(i+v(i,j), j) = 1;
+                           v(i+v(i,j), j) = v(i,j);
+                           v(i,j) = 0;
+                        else
+                            v(i,j)=1;
+                            plaza(i,j) = -2;   %原地不动，变道判定
+                        end
+                end
+            end
+        end
+        end
+end
+
+for i = 1:L-5   %扇形区主动变道
+    for j = 2:4
+        if plaza(i,j) == 1;
+            plaza(i,j) = -3;
+        end
+    end
+end
+
+for i = 1:L-2   %road 5主动变道
+        if plaza(i,5) == 1;
+            plaza(i,5) = -4;
+        end
+end
+
+for i = 1:L-2   %road 6主动变道
+        if plaza(i,6) == 1;
+            plaza(i,6) = -5;
+        end
+end
